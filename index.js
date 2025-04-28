@@ -65,7 +65,7 @@ app.get("/api/users/:_id/logs", (req, res) => {
       _id,
       username:logs[0].username,
       count: logs.length,
-      logs: logs.map(({description,duration,date})=>({description,duration,date}))
+      log: logs.map(({description,duration,date})=>({description,duration,date}))
     });
 });
 
