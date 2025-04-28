@@ -28,19 +28,16 @@ app.post("/api/users/:_id/exercises", (req, res) => {
     parseInt(req.body.duration),
     new Date(req.body.date).toDateString(),
   ];
-  userData.forEach((arr, i) => {
-    var username = arr.username;
-    if (arr._id === _id) {
-      return res.json({
-        _id,
-        username,
-        date,
-        duration,
-        description,
-      });
-    }
-    res.json({ error: "invalid input" });
-  });
+  const user = userData.filter((arr)=>arr._id === _id)
+  
+  if(user) return res.json({
+      _id,
+      username:user[0].username,
+      date,
+      duration,
+      description,
+    })
+  res.json({ error: "invalid input" });
 });
 
 //get request to all user data
