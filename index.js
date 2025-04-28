@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
 
-// let userData = [];
+let userLog = []
 
 app.post("/api/users", (req, res) => {
   const username = req.body.username;
@@ -29,11 +29,12 @@ app.post("/api/users/:_id/exercises", (req, res) => {
     parseInt(req.body.duration),
     new Date(req.body.date).toDateString(),
   ];
-  const user = userData.filter((arr)=>arr._id === _id)
-  
+  const user = userLog.filter((arr)=>arr._id === _id)
+  userLog.push({_id, description,duration,date})
+
   if(user) return res.json({
       _id,
-      username:user[0].username,
+      // username: username[0].username,
       date,
       duration,
       description,
@@ -49,21 +50,23 @@ app.get("/api/users", (req, res) => {
 
 //get request to get log of userdata
 
-app.get("/api/users/:id/logs", (req, res) => {
-  const id = req.params.id;
-  const user = userData.filter((arr) => arr.id === id);
-  res.json({
-    _id: user.id,
-    username: user.username,
+app.get("/api/users/:_id/logs", (req, res) => {
+  const _id = req.params._id;
+  const user = userLog.filter((arr) => arr._id === _id);
+  if(user) return res.json({
+    _id: user[0]._id,
+    // username: user.username,
     count: 1,
+    // username:user[0].username,
     log: [
       {
-        description: user.description,
-        duration: user.duration,
-        date: user.date,
+        description: user[0].description,
+        duration: user[0].duration,
+        date: user[0].date,
       },
     ],
-  });
+  })
+  res.json("No data-found")
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
