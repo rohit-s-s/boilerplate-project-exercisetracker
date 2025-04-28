@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
+let userData = require("./api")
 
 app.use(cors());
 app.use(express.static("public"));
@@ -12,7 +13,7 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
 
-let userData = [];
+// let userData = [];
 
 app.post("/api/users", (req, res) => {
   const username = req.body.username;
@@ -48,7 +49,7 @@ app.get("/api/users", (req, res) => {
 
 //get request to get log of userdata
 
-app.get("api/users/:id/logs", (req, res) => {
+app.get("/api/users/:id/logs", (req, res) => {
   const id = req.params.id;
   const user = userData.filter((arr) => arr.id === id);
   res.json({
