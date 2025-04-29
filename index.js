@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 // let userData = require("./api");
 const ConnectDB = require("./database")
+const userRoute = require("./route/userRoute")
 
 app.use(cors());
 app.use(express.static("public"));
@@ -15,8 +16,10 @@ app.get("/", (req, res) => {
 });
 
 //Connecting to database
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI 
 ConnectDB(MONGO_URI)
+
+app.use("/api/users", userRoute)
 
 
 // let userLog = [];
