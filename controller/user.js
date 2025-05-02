@@ -55,51 +55,56 @@ exports.handlePostExercises = async (req, res) => {
 
 
 
-//Display id, username, count and log in json 
 exports.handleGetLogs = async (req, res) => {
-  const { _id } = req.params;
-  const { from, to, limit } = req.query;
-  const user = await User.findOne({ _id });
-  if (!user) return res.status(400).json("No User found");
-  const username = user.username;
-  const query = {
-    _id,
-  };
-  if (from) {
-    query["log.date"] = { $gte: new Date(from) };
-  }
-  if (to) {
-    query["log.date"] = { $lte: new Date(to) };
-  }
-  if (limit) {
-    query["log.limit"] = parseInt(limit);
-  }
-  const logs = await Log.find(query)
-    .select({ _id: 1, username: 1, count: 1, log: { $slice: parseInt(limit) } })
-    .exec();
-  if (!logs) return res.status(400).json("No logs found");
-  // Check if the logs array is empty
-  if (logs.length === 0) {
-    return res.status(200).json({
-      _id,
-      username,
-      count: 0,
-      log: [],
-    });
-  }
-  // If logs exist, format the response
-  const formattedLogs = logs.map((log) => ({
-    _id: log._id,
-    username: log.username,
-    count: log.count,
-    log: log.log.map((entry) => ({
+  try {
+    const { _id } = req.params;
+    const { from, to, limit } = req.query;
+
+    const user = await User.findById(_id);
+    if (!user) return res.status(400).json("No User found");
+
+    const logDoc = await Log.findOne({ _id });
+    if (!logDoc) {
+      return res.status(200).json({
+        _id,
+        username: user.username,
+        count: 0,
+        log: [],
+      });
+    }
+
+    // Filter logs based on from/to in JS
+    let filteredLogs = logDoc.log;
+
+    if (from) {
+      const fromDate = new Date(from);
+      filteredLogs = filteredLogs.filter((entry) => new Date(entry.date) >= fromDate);
+    }
+
+    if (to) {
+      const toDate = new Date(to);
+      filteredLogs = filteredLogs.filter((entry) => new Date(entry.date) <= toDate);
+    }
+
+    if (limit) {
+      filteredLogs = filteredLogs.slice(0, parseInt(limit));
+    }
+
+    const formattedLogs = filteredLogs.map((entry) => ({
       description: entry.description,
       duration: entry.duration,
-      date: entry.date.toDateString(),
-    })),
-  }));
-  // Return the formatted logs
-  return res.status(200).json(formattedLogs);
-}
+      date: new Date(entry.date).toDateString(),
+    }));
 
+    return res.status(200).json({
+      _id,
+      username: user.username,
+      count: formattedLogs.length,
+      log: formattedLogs,
+    });
 
+  } catch (err) {
+    console.error("Error in handleGetLogs:", err);
+    res.status(500).json("Server Error");
+  }
+};
