@@ -58,6 +58,48 @@ exports.handlePostExercises = async (req, res) => {
 //Display id, username, count and log in json 
 exports.handleGetLogs = async (req, res) => {
   const { _id } = req.params;
-  const logData = await Log.findOne({_id})
-  return res.status(200).json(logData)
-};
+  const { from, to, limit } = req.query;
+  const user = await User.findOne({ _id });
+  if (!user) return res.status(400).json("No User found");
+  const username = user.username;
+  const query = {
+    _id,
+  };
+  if (from) {
+    query["log.date"] = { $gte: new Date(from) };
+  }
+  if (to) {
+    query["log.date"] = { $lte: new Date(to) };
+  }
+  if (limit) {
+    query["log.limit"] = parseInt(limit);
+  }
+  const logs = await Log.find(query)
+    .select({ _id: 1, username: 1, count: 1, log: { $slice: parseInt(limit) } })
+    .exec();
+  if (!logs) return res.status(400).json("No logs found");
+  // Check if the logs array is empty
+  if (logs.length === 0) {
+    return res.status(200).json({
+      _id,
+      username,
+      count: 0,
+      log: [],
+    });
+  }
+  // If logs exist, format the response
+  const formattedLogs = logs.map((log) => ({
+    _id: log._id,
+    username: log.username,
+    count: log.count,
+    log: log.log.map((entry) => ({
+      description: entry.description,
+      duration: entry.duration,
+      date: entry.date.toDateString(),
+    })),
+  }));
+  // Return the formatted logs
+  return res.status(200).json(formattedLogs);
+}
+
+
